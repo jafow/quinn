@@ -488,8 +488,8 @@ impl Connection {
     ///
     /// All ongoing requests will be completed, all new requests or server push will
     /// be rejected.
-    pub fn go_away(&mut self) {
-        self.0.h3.lock().unwrap().inner.go_away();
+    pub fn go_away(&mut self, grace: u64) {
+        self.0.h3.lock().unwrap().inner.go_away(grace);
     }
 
     // Update traffic keys spontaneously for testing purposes.

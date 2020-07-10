@@ -47,7 +47,7 @@ pub struct Connection {
     pending_streams: [BytesMut; 3],
     requests_in_flight: HashSet<StreamId>,
     max_id_in_flight: u64,
-    go_away: bool,
+    go_away: Option<StreamId>,
 
     #[cfg(feature = "interop-test-accessors")]
     pub had_refs: bool,
@@ -78,7 +78,7 @@ impl Connection {
             encoder_table: DynamicTable::new(),
             requests_in_flight: HashSet::with_capacity(32),
             max_id_in_flight: 0,
-            go_away: false,
+            go_away: None,
 
             #[cfg(feature = "interop-test-accessors")]
             had_refs: false,
@@ -187,34 +187,36 @@ impl Connection {
         self.pending_streams[ty as usize].reserve(capacity);
     }
 
-    pub fn request_initiated(&mut self, id: StreamId) {
-        if !self.go_away {
-            self.requests_in_flight.insert(id);
-            self.max_id_in_flight = cmp::max(id.0, self.max_id_in_flight);
+    // The remote peer initiated a stream: a request from client or a push from server
+    pub fn remote_stream_initiated(&mut self, id: StreamId) -> Result<()> {
+        if let Some(StreamId(max_id)) = self.go_away {
+            if id.0 > max_id {
+                return Err(Error::Aborted);
+            }
         }
+        self.requests_in_flight.insert(id);
+        self.max_id_in_flight = cmp::max(id.0, self.max_id_in_flight);
+        Ok(())
     }
 
-    pub fn request_finished(&mut self, id: StreamId) {
-        if !self.go_away {
-            self.requests_in_flight.remove(&id);
-        }
+    // A stream initiated by the remote peer has finished
+    pub fn remote_stream_finished(&mut self, id: StreamId) {
+        self.requests_in_flight.remove(&id);
     }
 
-    pub fn requests_in_flight(&self) -> usize {
-        self.requests_in_flight.len()
+    // A graceful shutdown initiated locally, let `grace` potentially in-flight
+    // incoming streams be processed.
+    pub fn go_away(&mut self, grace: u64) {
+        self.go_away = Some(StreamId(self.max_id_in_flight + grace));
+        HttpFrame::Goaway(self.max_id_in_flight)
+            .encode(&mut self.pending_streams[PendingStreamType::Control as usize]);
     }
 
-    pub fn go_away(&mut self) {
-        if !self.go_away {
-            self.go_away = true;
-            HttpFrame::Goaway(self.max_id_in_flight)
-                .encode(&mut self.pending_streams[PendingStreamType::Control as usize]);
-        }
-    }
-
-    pub fn leave(&mut self, id: StreamId) {
-        self.go_away = true;
-        self.requests_in_flight.retain(|i| i.0 <= id.0);
+    // Remote peer initiated a graceful shutdown, any stream greater than `max_id`
+    // will be rejected.
+    pub fn leave(&mut self, max_id: StreamId) {
+        self.go_away = Some(max_id);
+        self.requests_in_flight.retain(|i| i.0 <= max_id.0);
     }
 
     pub fn stream_cancel(&mut self, stream_id: StreamId) {
@@ -224,8 +226,12 @@ impl Connection {
         );
     }
 
+    pub fn requests_in_flight(&self) -> usize {
+        self.requests_in_flight.len()
+    }
+
     pub fn is_closing(&self) -> bool {
-        self.go_away
+        self.go_away.is_some()
     }
 }
 
@@ -233,6 +239,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
+    Aborted,
     HeaderListTooLarge,
     InvalidHeaderName(String),
     InvalidHeaderValue(String),
@@ -301,7 +308,7 @@ mod tests {
                 ],
                 requests_in_flight: HashSet::with_capacity(32),
                 max_id_in_flight: 0,
-                go_away: false,
+                go_away: None,
 
                 #[cfg(feature = "interop-test-accessors")]
                 had_refs: false,

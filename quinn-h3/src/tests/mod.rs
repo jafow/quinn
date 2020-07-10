@@ -226,7 +226,7 @@ async fn go_away() {
             .await
             .expect("accept");
         let recv_req = incoming_req.next().await.expect("wait request");
-        incoming_req.go_away();
+        incoming_req.go_away(0);
         let (_, mut sender) = recv_req.await.expect("recv_req");
         sender
             .send_response(
@@ -242,15 +242,11 @@ async fn go_away() {
     let conn = helper.make_connection().await;
     let (req, resp) = conn.send_request(get("/"));
     req.await.unwrap();
-    assert!(resp.await.is_ok());
+    assert_matches!(resp.await, Ok(_));
 
     delay_for(Duration::from_millis(50)).await;
-    let (req, resp) = conn.send_request(get("/"));
-    req.await.unwrap();
-    assert_matches!(
-        resp.await.map(|_| ()),
-        Err(Error::Http(HttpError::RequestRejected, None))
-    );
+    let (req, _) = conn.send_request(get("/"));
+    assert_matches!(req.await.map(|_| ()), Err(Error::Aborted));
 
     assert!(timeout_join(server_handle).await.is_ok());
 }
@@ -269,7 +265,7 @@ async fn go_away_from_client() {
     // create a second request but do not start it
     let (req2, resp2) = conn.send_request(get("/"));
     // The goaway is issued as first request is in flight but not the second
-    conn.go_away();
+    conn.go_away(0);
     // First request succeed
     assert!(resp1.await.is_ok());
 
