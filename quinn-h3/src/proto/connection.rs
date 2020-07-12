@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use bytes::{Buf, Bytes, BytesMut};
-use quinn_proto::StreamId;
+use quinn_proto::{Side, StreamId};
 use std::{cmp, convert::TryFrom};
 use tracing::trace;
 
@@ -41,6 +41,7 @@ impl PendingStreamType {
 }
 
 pub struct Connection {
+    side: Side,
     remote_settings: Option<Settings>,
     decoder_table: DynamicTable,
     encoder_table: DynamicTable,
@@ -54,7 +55,7 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn with_settings(settings: Settings) -> Self {
+    pub fn new(side: Side, settings: Settings) -> Self {
         let mut decoder_table = DynamicTable::new();
         decoder_table
             .set_max_blocked(settings.qpack_max_blocked_streams() as usize)
@@ -72,6 +73,7 @@ impl Connection {
         ];
 
         Self {
+            side,
             decoder_table,
             pending_streams,
             remote_settings: None,
@@ -298,6 +300,7 @@ mod tests {
     impl Default for Connection {
         fn default() -> Self {
             Self {
+                side: Side::Client,
                 remote_settings: None,
                 decoder_table: DynamicTable::new(),
                 encoder_table: DynamicTable::new(),
@@ -413,7 +416,7 @@ mod tests {
         let mut settings = Settings::new();
         settings.set_qpack_max_blocked_streams(42).unwrap();
         settings.set_qpack_max_table_capacity(2048).unwrap();
-        let mut server = Connection::with_settings(settings);
+        let mut server = Connection::new(Side::Server, settings);
 
         assert_matches!(
             server.decode_header(StreamId(1), &encoded),
