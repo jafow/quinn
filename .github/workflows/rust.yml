@@ -31,6 +31,8 @@ jobs:
           command: build
           args: --workspace --all-targets
       - uses: actions-rs/cargo@v1
+        env:
+          RUST_LOG: 'quinn_h3=trace'
         with:
           command: test
           args: --workspace
