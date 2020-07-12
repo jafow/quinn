@@ -176,7 +176,8 @@ impl fmt::Display for StreamId {
 }
 
 impl StreamId {
-    pub(crate) fn new(initiator: Side, dir: Dir, index: u64) -> Self {
+    #[doc(hidden)]
+    pub fn new(initiator: Side, dir: Dir, index: u64) -> Self {
         StreamId(index << 2 | (dir as u64) << 1 | initiator as u64)
     }
     /// Which side of a connection initiated the stream
