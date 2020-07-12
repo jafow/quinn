@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use bytes::{Buf, Bytes, BytesMut};
-use quinn_proto::{Side, StreamId};
-use std::{cmp, convert::TryFrom};
-use tracing::trace;
+use quinn_proto::{Dir, Side, StreamId};
+use std::convert::TryFrom;
+use tracing::{debug, trace, warn};
 
 use crate::{
     proto::{
@@ -47,7 +47,7 @@ pub struct Connection {
     encoder_table: DynamicTable,
     pending_streams: [BytesMut; 3],
     requests_in_flight: HashSet<StreamId>,
-    max_id_in_flight: u64,
+    max_id_in_flight: StreamId,
     go_away: Option<StreamId>,
 
     #[cfg(feature = "interop-test-accessors")]
@@ -72,6 +72,12 @@ impl Connection {
             BytesMut::with_capacity(2048),
         ];
 
+        let dir = if side == Side::Server {
+            Dir::Bi
+        } else {
+            Dir::Uni
+        };
+
         Self {
             side,
             decoder_table,
@@ -79,7 +85,7 @@ impl Connection {
             remote_settings: None,
             encoder_table: DynamicTable::new(),
             requests_in_flight: HashSet::with_capacity(32),
-            max_id_in_flight: 0,
+            max_id_in_flight: StreamId::new(side, dir, 0),
             go_away: None,
 
             #[cfg(feature = "interop-test-accessors")]
@@ -191,13 +197,19 @@ impl Connection {
 
     // The remote peer initiated a stream: a request from client or a push from server
     pub fn remote_stream_initiated(&mut self, id: StreamId) -> Result<()> {
-        if let Some(StreamId(max_id)) = self.go_away {
-            if id.0 > max_id {
+        if let Some(max_id) = self.go_away {
+            if id.index() > max_id.index() {
+                warn!("rejecting {}", id);
                 return Err(Error::Aborted);
             }
         }
+        debug!("accepting {}", id);
         self.requests_in_flight.insert(id);
-        self.max_id_in_flight = cmp::max(id.0, self.max_id_in_flight);
+        self.max_id_in_flight = if id.index() > self.max_id_in_flight.index() {
+            id
+        } else {
+            self.max_id_in_flight
+        };
         Ok(())
     }
 
@@ -206,11 +218,22 @@ impl Connection {
         self.requests_in_flight.remove(&id);
     }
 
-    // A graceful shutdown initiated locally, let `grace` potentially in-flight
+    // A graceful shutdown initiated locally, let `allow_streams` potentially in-flight
     // incoming streams be processed.
-    pub fn go_away(&mut self, grace: u64) {
-        self.go_away = Some(StreamId(self.max_id_in_flight + grace));
-        HttpFrame::Goaway(self.max_id_in_flight)
+    pub fn go_away(&mut self, allow_streams: u64) {
+        let dir = if self.side == Side::Server {
+            Dir::Bi
+        } else {
+            Dir::Uni
+        };
+        let max_id = StreamId::new(
+            !self.side,
+            dir,
+            self.max_id_in_flight.index() + allow_streams,
+        );
+        debug!("shutting down, last possibly accepted: {}", max_id);
+        self.go_away = Some(max_id);
+        HttpFrame::Goaway(self.max_id_in_flight.0)
             .encode(&mut self.pending_streams[PendingStreamType::Control as usize]);
     }
 
@@ -310,7 +333,7 @@ mod tests {
                     BytesMut::with_capacity(2048),
                 ],
                 requests_in_flight: HashSet::with_capacity(32),
-                max_id_in_flight: 0,
+                max_id_in_flight: StreamId::new(Side::Client, Dir::Uni, 0),
                 go_away: None,
 
                 #[cfg(feature = "interop-test-accessors")]

@@ -508,10 +508,10 @@ pub struct IncomingRequest(ConnectionRef);
 impl IncomingRequest {
     /// Gracefully close the connection.
     ///
-    /// All currently running requests will be honored, as well as `grace` requests
+    /// All currently running requests will be honored, as well as `allow_requests` requests
     /// sent before the client received the GoAway frame.
-    pub fn go_away(&mut self, grace: u64) {
-        self.0.h3.lock().unwrap().inner.go_away(grace);
+    pub fn go_away(&mut self, allow_requests: u64) {
+        self.0.h3.lock().unwrap().inner.go_away(allow_requests);
     }
 }
 
