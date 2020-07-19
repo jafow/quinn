@@ -1,0 +1,32 @@
+
+[package]
+name = "quinn-fuzz"
+version = "0.0.0"
+authors = ["Automatically generated"]
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.3"
+bytes = "0.5.6"
+
+[dependencies.quinn]
+path = "../quinn"
+
+[dependencies.proto]
+path = "../quinn-proto"
+package = "quinn-proto"
+version = "0.6.1"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "streams"
+path = "fuzz_targets/streams.rs"
+test = false
+doc = false

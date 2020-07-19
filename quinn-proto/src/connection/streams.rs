@@ -19,6 +19,54 @@ use crate::{
     Dir, Side, StreamId, TransportError, VarInt, MAX_STREAM_COUNT,
 };
 
+#[cfg(fuzzing)]
+pub struct Streams {
+    side: Side,
+    // Set of streams that are currently open, or could be immediately opened by the peer
+    send: HashMap<StreamId, Send>,
+    recv: HashMap<StreamId, Recv>,
+    next: [u64; 2],
+    // Locally initiated
+    max: [u64; 2],
+    // Maximum that can be remotely initiated
+    max_remote: [u64; 2],
+    // Lowest that hasn't actually been opened
+    next_remote: [u64; 2],
+    /// Whether the remote endpoint has opened any streams the application doesn't know about yet,
+    /// per directionality
+    opened: [bool; 2],
+    // Next to report to the application, once opened
+    next_reported_remote: [u64; 2],
+    /// Number of outbound streams
+    ///
+    /// This differs from `self.send.len()` in that it does not include streams that the peer is
+    /// permitted to open but which have not yet been opened.
+    send_streams: usize,
+    /// Streams with outgoing data queued
+    pending: Vec<StreamId>,
+
+    events: VecDeque<StreamEvent>,
+    /// Streams blocked on connection-level flow control or stream window space
+    ///
+    /// Streams are only added to this list when a write fails.
+    connection_blocked: Vec<StreamId>,
+    /// Connection-level flow control budget dictated by the peer
+    max_data: u64,
+    /// Limit on incoming data
+    local_max_data: u64,
+    /// Sum of current offsets of all send streams.
+    data_sent: u64,
+    /// Sum of end offsets of all receive streams. Includes gaps, so it's an upper bound.
+    data_recvd: u64,
+    /// Total quantity of unacknowledged outgoing data
+    unacked_data: u64,
+    /// Configured upper bound for `unacked_data`
+    send_window: u64,
+    /// Configured upper bound for how much unacked data the peer can send us per stream
+    stream_receive_window: u64,
+}
+
+#[cfg(not(fuzzing))]
 pub(crate) struct Streams {
     side: Side,
     // Set of streams that are currently open, or could be immediately opened by the peer

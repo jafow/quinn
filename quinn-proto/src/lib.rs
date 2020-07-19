@@ -33,6 +33,11 @@ mod varint;
 
 pub use varint::{VarInt, VarIntBoundsExceeded};
 
+#[allow(missing_docs)]
+#[cfg(fuzzing)]
+pub mod connection;
+
+#[cfg(not(fuzzing))]
 mod connection;
 pub use crate::connection::{ConnectionError, Event, SendDatagramError};
 pub use crate::connection::{FinishError, ReadError, StreamEvent, UnknownStream, WriteError};
