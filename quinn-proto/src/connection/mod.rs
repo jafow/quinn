@@ -41,18 +41,8 @@ mod send_buffer;
 mod spaces;
 use spaces::{PacketSpace, Retransmits, SentPacket};
 
-#[allow(missing_docs)]
-#[cfg(fuzzing)]
-pub mod streams;
-
-#[cfg(fuzzing)]
-pub use streams::{Streams};
-
-#[cfg(not(fuzzing))]
 mod streams;
-
-#[cfg(not(fuzzing))]
-use streams::Streams;
+pub use streams::Streams;
 pub use streams::{FinishError, ReadError, StreamEvent, UnknownStream, WriteError};
 
 mod timer;

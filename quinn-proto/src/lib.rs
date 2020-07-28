@@ -33,11 +33,6 @@ mod varint;
 
 pub use varint::{VarInt, VarIntBoundsExceeded};
 
-#[allow(missing_docs)]
-#[cfg(fuzzing)]
-pub mod connection;
-
-#[cfg(not(fuzzing))]
 mod connection;
 pub use crate::connection::{ConnectionError, Event, SendDatagramError};
 pub use crate::connection::{FinishError, ReadError, StreamEvent, UnknownStream, WriteError};
@@ -48,6 +43,9 @@ pub use config::{ConfigError, TransportConfig};
 pub mod crypto;
 #[cfg(feature = "rustls")]
 pub use crypto::types::*;
+
+#[cfg(fuzzing)]
+pub mod fuzzing;
 
 mod frame;
 use crate::frame::Frame;
@@ -94,6 +92,13 @@ mod rustls_impls {
 
 #[cfg(feature = "rustls")]
 pub use crate::rustls_impls::*;
+
+#[doc(hidden)]
+#[cfg(fuzzing)]
+pub mod fuzzing {
+    pub use crate::connection::Streams;
+    pub use crate::frame::{Stream};
+}
 
 /// The QUIC protocol version implemented
 const VERSION: u32 = 0xff00_001d;
