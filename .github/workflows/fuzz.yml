@@ -1,0 +1,22 @@
+name: fuzz
+
+on:
+  push:
+    branches: ['fuzz']
+
+jobs:
+  fuzzing:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fuzz
+          args: run streams --jobs=1 -- -runs=6 -max_total_time=55 -timeout=20
+      - uses: actions-rs/cargo@v1
