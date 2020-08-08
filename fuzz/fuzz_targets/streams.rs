@@ -1,7 +1,6 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 use arbitrary::{Arbitrary};
-use bytes::{Bytes};
 
 extern crate proto;
 use proto::fuzzing::{Streams};
