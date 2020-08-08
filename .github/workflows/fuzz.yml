@@ -2,7 +2,7 @@ name: fuzz
 
 on:
   push:
-    branches: ['fuzz']
+    branches: ['fuzz-ci', 'fuzz']
 
 jobs:
   fuzzing:
