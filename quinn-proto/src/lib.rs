@@ -94,12 +94,11 @@ pub use crate::rustls_impls::*;
 #[cfg(fuzzing)]
 pub mod fuzzing {
     pub use crate::connection::Streams;
-    pub use crate::frame::{Stream};
+    pub use crate::frame::Stream;
 }
 
 #[cfg(fuzzing)]
 use arbitrary::Arbitrary;
-
 
 /// The QUIC protocol version implemented
 const VERSION: u32 = 0xff00_001d;
