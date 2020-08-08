@@ -1,22 +1,23 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use std::io;
+use arbitrary::{Arbitrary};
 use bytes::{Bytes};
 
 extern crate proto;
-use proto::connection::{Streams};
-use proto::frame::{Stream};
-use proto::{Side, Dir, StreamId};
+use proto::fuzzing::{Streams};
 
+use proto::{Side};
 
-fuzz_target!(|data: &[u8]| {
-    let mut client = Streams::new(Side::Client, 128, 128, 1024 * 1024, 1024 * 1024, 1024 * 1024);
-    let id = StreamId::new(Side::Server, Dir::Uni, 0);
-    let d = Bytes::copy_from_slice(data);
-    client.received(Stream {
-        id,
-        offset: 0,
-        fin: false,
-        data: d
-    });
+#[derive(Arbitrary, Debug)]
+struct StreamsParams {
+    side: Side,
+    max_remote_uni: u64,
+    max_remote_bi: u64,
+    send_window: u64,
+    receive_window: u64,
+    stream_receive_window: u64
+}
+
+fuzz_target!(|data: StreamsParams| {
+    Streams::new(data.side, data.max_remote_uni, data.max_remote_bi, data.send_window, data.receive_window, data.stream_receive_window);
 });

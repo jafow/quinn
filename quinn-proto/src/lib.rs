@@ -44,9 +44,6 @@ pub mod crypto;
 #[cfg(feature = "rustls")]
 pub use crypto::types::*;
 
-#[cfg(fuzzing)]
-pub mod fuzzing;
-
 mod frame;
 use crate::frame::Frame;
 pub use crate::frame::{ApplicationClose, ConnectionClose, Datagram};
@@ -100,10 +97,15 @@ pub mod fuzzing {
     pub use crate::frame::{Stream};
 }
 
+#[cfg(fuzzing)]
+use arbitrary::Arbitrary;
+
+
 /// The QUIC protocol version implemented
 const VERSION: u32 = 0xff00_001d;
 
 /// Whether an endpoint was the initiator of a connection
+#[cfg_attr(fuzzing, derive(Arbitrary))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Side {
     /// The initiator of a connection
