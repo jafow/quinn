@@ -17,6 +17,10 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          command: install
+          args: cargo-fuzz
+      - uses: actions-rs/cargo@v1
+        with:
           command: fuzz
           args: run streams --jobs=1 -- -runs=6 -max_total_time=55 -timeout=20
-      - uses: actions-rs/cargo@v1
+
