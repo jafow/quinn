@@ -16,11 +16,13 @@ jobs:
           toolchain: nightly
           override: true
       - uses: actions-rs/cargo@v1
+        name: install fuzzer
         with:
           command: install
           args: cargo-fuzz
       - uses: actions-rs/cargo@v1
+        name: run fuzzer
         with:
           command: fuzz
-          args: run streams --jobs=1 -- -runs=6 -max_total_time=55 -timeout=20
+          args: run --release streams --jobs=1 -- -runs=6 -max_total_time=300
 
