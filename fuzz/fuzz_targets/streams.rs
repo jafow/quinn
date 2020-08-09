@@ -1,11 +1,11 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use arbitrary::{Arbitrary};
+use arbitrary::Arbitrary;
 
 extern crate proto;
-use proto::fuzzing::{Streams};
+use proto::fuzzing::Streams;
 
-use proto::{Side};
+use proto::Side;
 
 #[derive(Arbitrary, Debug)]
 struct StreamsParams {

@@ -32,3 +32,9 @@ name = "streams"
 path = "fuzz_targets/streams.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "streamid"
+path = "fuzz_targets/streamid.rs"
+test = false
+doc = false
