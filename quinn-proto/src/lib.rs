@@ -97,14 +97,14 @@ pub mod fuzzing {
     pub use crate::frame::Stream;
 }
 
-#[cfg(fuzzing)]
+#[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
 /// The QUIC protocol version implemented
 const VERSION: u32 = 0xff00_001d;
 
 /// Whether an endpoint was the initiator of a connection
-#[cfg_attr(fuzzing, derive(Arbitrary))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Side {
     /// The initiator of a connection
@@ -138,6 +138,7 @@ impl ops::Not for Side {
 }
 
 /// Whether a stream communicates data in both directions or only from the initiator
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Dir {
     /// Data flows in both directions
