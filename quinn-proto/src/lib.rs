@@ -90,16 +90,31 @@ mod rustls_impls {
 #[cfg(feature = "rustls")]
 pub use crate::rustls_impls::*;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::{Arbitrary};
+
 #[doc(hidden)]
 #[cfg(fuzzing)]
 pub mod fuzzing {
     pub use crate::connection::Streams;
-    pub use crate::frame::Stream;
+    pub use crate::frame::ResetStream;
+    pub use crate::transport_parameters::TransportParameters;
+    use arbitrary::{Arbitrary, Result, Unstructured};
+
+    impl Arbitrary for TransportParameters {
+        fn arbitrary(u: &mut Unstructured<'_>) -> Result<Self> {
+            let (a, b, c, d): (u64, u64, u64, u64) = u.arbitrary()?;
+
+            Ok(TransportParameters {
+                initial_max_streams_bidi: a,
+                initial_max_streams_uni: b,
+                ack_delay_exponent: c,
+                max_udp_payload_size: d,
+                ..TransportParameters::default()
+            })
+        }
+    }
 }
-
-#[cfg(feature = "arbitrary")]
-use arbitrary::Arbitrary;
-
 /// The QUIC protocol version implemented
 const VERSION: u32 = 0xff00_001d;
 
@@ -164,6 +179,7 @@ impl fmt::Display for Dir {
 }
 
 /// Identifier for a stream within a particular connection
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct StreamId(#[doc(hidden)] pub u64);
 
