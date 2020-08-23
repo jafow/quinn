@@ -5,6 +5,7 @@ version = "0.0.0"
 authors = ["Automatically generated"]
 publish = false
 edition = "2018"
+workspace = ".."
 
 [package.metadata]
 cargo-fuzz = true
@@ -22,10 +23,6 @@ features = ["arbitrary"]
 path = "../quinn-proto"
 package = "quinn-proto"
 version = "0.6.1"
-
-# Prevent this from interfering with workspaces
-[workspace]
-members = ["."]
 
 [[bin]]
 name = "streams"
