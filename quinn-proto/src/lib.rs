@@ -91,7 +91,7 @@ mod rustls_impls {
 pub use crate::rustls_impls::*;
 
 #[cfg(feature = "arbitrary")]
-use arbitrary::{Arbitrary};
+use arbitrary::Arbitrary;
 
 #[doc(hidden)]
 #[cfg(fuzzing)]

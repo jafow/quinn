@@ -1,16 +1,15 @@
 #![no_main]
-use libfuzzer_sys::fuzz_target;
 use arbitrary::Arbitrary;
+use libfuzzer_sys::fuzz_target;
 
 extern crate proto;
-use proto::{StreamId, Side, Dir};
-
+use proto::{Dir, Side, StreamId};
 
 #[derive(Arbitrary, Debug)]
 struct StreamIdParams {
     side: Side,
     dir: Dir,
-    index: u64
+    index: u64,
 }
 
 fuzz_target!(|data: StreamIdParams| {
