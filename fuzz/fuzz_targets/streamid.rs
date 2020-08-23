@@ -10,11 +10,11 @@ use proto::{StreamId, Side, Dir};
 struct StreamIdParams {
     side: Side,
     dir: Dir,
-    initiator: u64
+    index: u64
 }
 
 fuzz_target!(|data: StreamIdParams| {
-    let s = StreamId::new(data.side, data.dir, data.initiator);
+    let s = StreamId::new(data.side, data.dir, data.index);
     assert_eq!(s.initiator(), data.side);
     assert_eq!(s.dir(), data.dir);
 });
