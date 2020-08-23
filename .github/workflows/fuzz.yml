@@ -24,5 +24,4 @@ jobs:
         name: run fuzzer
         with:
           command: fuzz
-          args: run --release streams --jobs=1 -- -max_total_time=400 -rss_limit_mb=8192
-
+          args: run --release --jobs=2 streams -- -max_total_time=600 -rss_limit_mb=8192
