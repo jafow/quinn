@@ -1,11 +1,9 @@
-
 [package]
 name = "quinn-fuzz"
 version = "0.0.0"
 authors = ["Automatically generated"]
 publish = false
 edition = "2018"
-workspace = ".."
 
 [package.metadata]
 cargo-fuzz = true
@@ -13,16 +11,16 @@ cargo-fuzz = true
 [dependencies]
 arbitrary = { version = "0.4.5", features = ["derive"] }
 libfuzzer-sys = "0.3"
-bytes = "0.5.6"
-
-[dependencies.quinn]
-path = "../quinn"
 
 [dependencies.proto]
 features = ["arbitrary"]
 path = "../quinn-proto"
 package = "quinn-proto"
 version = "0.6.1"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
 
 [[bin]]
 name = "streams"
