@@ -19,19 +19,17 @@ struct StreamParams {
 }
 
 #[derive(Arbitrary, Debug)]
-enum Operation<A>
-where
-    A: Arbitrary,
+enum Operation
 {
-    Open(Vec<A>),
+    Open(Vec<u8>),
     Accept(Dir),
     Finish(StreamId),
-    ReceivedStopSending((StreamId, VarInt)),
+    ReceivedStopSending(StreamId, VarInt),
     ReceivedReset(ResetStream),
     Reset(StreamId),
 }
 
-fuzz_target!(|input: (StreamParams, Vec<Operation<u8>>)| {
+fuzz_target!(|input: (StreamParams, Vec<Operation>)| {
     let (params, operations) = input;
     let mut stream = Streams::new(
         params.side,
@@ -56,8 +54,7 @@ fuzz_target!(|input: (StreamParams, Vec<Operation<u8>>)| {
             Operation::Finish(id) => {
                 stream.finish(id);
             }
-            Operation::ReceivedStopSending(data) => {
-                let (sid, err_code) = data;
+            Operation::ReceivedStopSending(sid, err_code) => {
                 stream.received_stop_sending(sid, err_code);
             }
             Operation::ReceivedReset(rs) => {
