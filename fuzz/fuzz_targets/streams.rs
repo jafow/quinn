@@ -24,7 +24,7 @@ enum Operation
     Open(Vec<u8>),
     Accept(Dir),
     Finish(StreamId),
-    ReceivedStopSending((StreamId, VarInt)),
+    ReceivedStopSending(StreamId, VarInt),
     ReceivedReset(ResetStream),
     Reset(StreamId),
 }
@@ -54,8 +54,7 @@ fuzz_target!(|input: (StreamParams, Vec<Operation>)| {
             Operation::Finish(id) => {
                 stream.finish(id);
             }
-            Operation::ReceivedStopSending(data) => {
-                let (sid, err_code) = data;
+            Operation::ReceivedStopSending(sid, err_code) => {
                 stream.received_stop_sending(sid, err_code);
             }
             Operation::ReceivedReset(rs) => {
