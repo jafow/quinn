@@ -4,7 +4,7 @@ use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
 
 extern crate proto;
-use proto::fuzzing::{ResetStream, Streams};
+use proto::fuzzing::{ResetStream, Streams, TransportParameters};
 use proto::{Dir, Side, StreamId, VarInt};
 
 #[derive(Arbitrary, Debug)]
@@ -16,12 +16,13 @@ struct StreamParams {
     receive_window: u16,
     stream_receive_window: u16,
     dir: Dir,
+    transport_params: TransportParameters
 }
 
 #[derive(Arbitrary, Debug)]
 enum Operation
 {
-    Open(Vec<u8>),
+    Open,
     Accept(Dir),
     Finish(StreamId),
     ReceivedStopSending(StreamId, VarInt),
@@ -42,11 +43,8 @@ fuzz_target!(|input: (StreamParams, Vec<Operation>)| {
 
     for operation in operations {
         match operation {
-            Operation::Open(v) => {
-                let mut data = Unstructured::new(&v[..]);
-                if let Ok(tp) = data.arbitrary() {
-                    stream.open(&tp, params.dir);
-                }
+            Operation::Open => {
+                stream.open(&params.transport_params, params.dir);
             }
             Operation::Accept(dir) => {
                 stream.accept(dir);
