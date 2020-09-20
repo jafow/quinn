@@ -20,8 +20,7 @@ struct StreamParams {
 }
 
 #[derive(Arbitrary, Debug)]
-enum Operation
-{
+enum Operation {
     Open,
     Accept(Dir),
     Finish(StreamId),
