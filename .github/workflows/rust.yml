@@ -61,11 +61,8 @@ jobs:
           cd fuzz
           echo "hello"
           echo `pwd`
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
-      - name: where are you
+      - uses: actions-rs/toolchain@v1
+        name: do the thing
         run: |
-          echo "where are u"
-          echo `pwd`
+          cd fuzz
+          cargo clippy -- -D warnings
