@@ -57,12 +57,18 @@ jobs:
           command: clippy
           args: --workspace --exclude fuzz --all-targets -- -D warnings
       - name: cd to fuzz workspace
+        run: cd fuzz
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+      - name: where are you
         run: |
-          cd fuzz
-          echo "hello"
+          echo "where are u"
           echo `pwd`
-      - uses: actions-rs/toolchain@v1
-        name: do the thing
-        run: |
-          cd fuzz
-          cargo clippy -- -D warnings
+
+  # audit:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: EmbarkStudios/cargo-deny-action@v1
