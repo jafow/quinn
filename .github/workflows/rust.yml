@@ -56,16 +56,16 @@ jobs:
         with:
           command: clippy
           args: --workspace --exclude fuzz --all-targets -- -D warnings
-      - name: cd to fuzz workspace
-        run: cd fuzz
-      - uses: actions-rs/cargo@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          command: clippy
-          args: -- -D warnings
-      - name: where are you
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - name: fuzzzzzzz
         run: |
-          echo "where are u"
-          echo `pwd`
+          cd fuzz
+          cargo clippy -- -D warnings
 
   # audit:
   #   runs-on: ubuntu-latest
