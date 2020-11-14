@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['master', '0.5.x']
+    branches: ['master', '0.5.x', 'test-fuzz-packet-ci']
   pull_request:
   schedule:
     - cron: "21 3 * * 5"
